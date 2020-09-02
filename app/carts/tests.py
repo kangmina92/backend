@@ -1,4 +1,3 @@
-
 import os
 from django.contrib.auth import get_user_model
 from rest_framework import status
@@ -33,32 +32,64 @@ class Cart_test(APITestCase):
             self.goods = Goods.objects.create(img=test_file, info_img=test_file2, title='상품명',
                                               short_desc='간단설명', price='555')
 
-    def test_cart_create(self):
+
+    def test_cart_item_create(self):
         user = self.user
-        goods = Goods.objects.first()
+        self.client.force_authenticate(user=user)
+
         data = {
-            "goods": goods.pk,
-            "quantity": 3,
-            "user": user.pk
+            "goods": 1,
+            "quentity": 3,
+            "cart": 1
         }
 
-        # response = self.client.post(f'/api/carts', data=data)
+        response = self.client.post(f'/api/cart/{user.pk}/item', data=data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['goods'], data['goods'])
+        self.assertEqual(data['goods'], response.data['goods'])
+        self.assertEqual(data['cart'], response.data['cart'])
 
-    def test_cart_list(self):
+    def test_cart_item_list(self):
         user = self.user
+        self.client.force_authenticate(user=user)
         test_goods = Goods.objects.all()
 
         for i in test_goods:
-            self.carts = CartItem.objects.create(goods=i, user=user, quantity=4)
+            self.carts = CartItem.objects.create(cart=user.cart, goods=i, quantity=4)
 
-        response = self.client.get(f'/api/carts')
-        print('yyyy',response.data(len()))
+        cart_item_list = CartItem.objects.values()
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # self.assertEqual(response.data(len()), status.HTTP_200_OK)
+        response = self.client.get(f'/api/cart/{user.pk}/item')
+
+        for query_ins, response_ins in zip(cart_item_list, response.data):
+            self.assertEqual(query_ins['goods_id'], response_ins['goods']['id'])
+            self.assertEqual(query_ins['id'], response_ins['id'])
+
+
+    def test_cart_item_update(self):
+        user = self.user
+        self.client.force_authenticate(user=user)
+        # test_goods = Goods.objects.first()
+
+        data = {
+            "goods": 1,
+            "quentity": 3,
+            "cart": 1
+        }
+
+        response = self.client.post(f'/api/cart/{user.pk}/item', data=data)
+        print('first', response)
+
+        # data = {
+        #     "goods": test_goods.pk,
+        #     "quentity": 2,
+        #     "cart": user.cart
+        # }
+        #
+        #
+        # item = CartItem.objects.first()
+        #
+        # response = self.client.patch(f'/api/cart/{user.pk}/item/{test_goods.id}', data=data)
 
 
         self.fail()
