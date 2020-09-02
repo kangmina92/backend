@@ -42,7 +42,7 @@ class Cart_test(APITestCase):
             "user": user.pk
         }
 
-        response = self.client.post(f'/api/carts', data=data)
+        # response = self.client.post(f'/api/carts', data=data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['goods'], data['goods'])
